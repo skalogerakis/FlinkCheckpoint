@@ -1,0 +1,6 @@
+org/example/WordCountWithCheckpoint$StatefulReduceFunc.class
+org/example/WordCountWithCheckpoint.class
+org/example/WordCountWithCheckpoint$1.class
+org/example/WordCountData.class
+org/example/WordCount.class
+org/example/WordCount$Tokenizer.class
