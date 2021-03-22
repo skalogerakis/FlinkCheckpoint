@@ -1,0 +1,5 @@
+# Execetute a jar file
+ ./flink run /home/skalogerakis/Projects/FlinkCheckpoint/target/FlinkCheckpoint-1.0-SNAPSHOT.jar -c /home/skalogerakis/Projects/FlinkCheckpoint/Checkpoint
+
+# Execute from savepoint (Using ID) 
+./flink run -s /home/skalogerakis/Projects/FlinkCheckpoint/Checkpoint/bca17900c360f7847a75bb4ea295baf1/chk-* /home/skalogerakis/Projects/FlinkCheckpoint/target/FlinkCheckpoint-1.0-SNAPSHOT.jar -c /home/skalogerakis/Projects/FlinkCheckpoint/Checkpoint
