@@ -29,10 +29,11 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <flink.version>1.12.2</flink.version>
+    <flink.version>1.12.1</flink.version>
     <scala.binary.version>2.12</scala.binary.version>
     <scala.version>2.12.3</scala.version>
     <java.version>1.8</java.version>
+    <hadoop.version>3.2.2</hadoop.version>
     <kafka.version>2.4.0</kafka.version>
   </properties>
 
@@ -43,12 +44,14 @@
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-scala_${scala.binary.version}</artifactId>
       <version>${flink.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
       <version>${flink.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Scala Library, provided by Flink as well. -->
@@ -56,19 +59,21 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-clients_${scala.binary.version}</artifactId>
       <version>${flink.version}</version>
+      <scope>provided</scope>
     </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>org.apache.flink</groupId>-->
-<!--      <artifactId>flink-java</artifactId>-->
-<!--      <version>${flink.version}</version>-->
-<!--    </dependency>-->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-java</artifactId>
+      <version>${flink.version}</version>
+    </dependency>
 
 <!--    <dependency>-->
 <!--      <groupId>org.apache.flink</groupId>-->
@@ -92,11 +97,13 @@
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
       <version>${kafka.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-avro</artifactId>
       <version>${flink.version}</version>
+      <scope>provided</scope>
     </dependency>
 
 <!--    <dependency>-->
@@ -120,10 +127,57 @@
 
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
+      <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
       <version>${flink.version}</version>
-
     </dependency>
+
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hadoop</groupId>-->
+<!--      <artifactId>hadoop-client</artifactId>-->
+<!--      <version>${hadoop.version}</version>-->
+<!--    </dependency>-->
+
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hadoop</groupId>-->
+<!--      <artifactId>hadoop-common</artifactId>-->
+<!--      <version>${hadoop.version}</version>-->
+<!--    </dependency>-->
+
+<!--    <dependency>-->
+<!--      <groupId>org.apache.hadoop</groupId>-->
+<!--      <artifactId>hadoop-hdfs</artifactId>-->
+<!--      <version>${hadoop.version}</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
+
+<!--    <dependency>-->
+<!--      <groupId>org.apache.flink</groupId>-->
+<!--      <artifactId>flink-shaded-hadoop-2-uber</artifactId>-->
+<!--      <version>2.8.3-10.0</version>-->
+<!--      <scope>provided</scope>-->
+<!--    </dependency>-->
+
+
+    <!--    <dependency>-->
+<!--      <groupId>org.apache.flink</groupId>-->
+<!--      <artifactId>flink-shaded-hadoop-2-uber</artifactId>-->
+<!--      <version>2.7.5-10.0</version>-->
+<!--    </dependency>-->
+
+    <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-shaded-hadoop-3 -->
+<!--    <dependency>-->
+<!--      <groupId>com.alibaba.blink</groupId>-->
+<!--      <artifactId>flink-shaded-hadoop3</artifactId>-->
+<!--      <version>blink-3.7.0</version>-->
+<!--    </dependency>-->
+
+
+    <!--    <dependency>-->
+<!--      <groupId>org.apache.flink</groupId>-->
+<!--      <artifactId>flink-shaded-hadoop-2</artifactId>-->
+<!--      <version>2.8.3-9.0</version>-->
+<!--    </dependency>-->
+
 
     <!--		&lt;!&ndash; https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-core &ndash;&gt;-->
     <!--		<dependency>-->
@@ -132,12 +186,6 @@
     <!--			<version>1.2.1</version>-->
     <!--		</dependency>-->
 
-    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-hdfs -->
-
-    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
-
-
-    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-client -->
 
     <!--		<dependency>-->
     <!--			<groupId>org.apache.flink</groupId>-->
@@ -159,6 +207,9 @@
       <version>1.2.17</version>
       <scope>runtime</scope>
     </dependency>
+
+
+
   </dependencies>
 
   <build>
@@ -177,6 +228,25 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <artifactSet>
+                <excludes>
+                  <exclude>com.google.code.findbugs:jsr305</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>log4j:*</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <!-- Do not copy the signatures in the META-INF folder.
+                  Otherwise, this might cause SecurityExceptions when using the JAR. -->
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
               <transformers>
                 <transformer
                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -210,63 +280,4 @@
     </plugins>
   </build>
 
-  <profiles>
-    <profile>
-      <id>add-dependencies-for-IDEA</id>
-
-      <activation>
-        <property>
-          <name>idea.version</name>
-        </property>
-      </activation>
-
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-scala_${scala.binary.version}</artifactId>
-          <version>${flink.version}</version>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
-          <version>${flink.version}</version>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-          <version>${scala.version}</version>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-java</artifactId>
-          <version>${flink.version}</version>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-streaming-java_2.12</artifactId>
-          <version>${flink.version}</version>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
-          <version>${flink.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-core</artifactId>
-          <version>${flink.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>flink-avro</artifactId>
-          <version>${flink.version}</version>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
 </project>
