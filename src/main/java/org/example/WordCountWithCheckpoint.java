@@ -9,6 +9,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
 //import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
+import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
 import org.apache.flink.contrib.streaming.state.RocksDBStateBackend;
 import org.apache.flink.metrics.Counter;
 //import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
@@ -25,7 +26,6 @@ import java.nio.file.Paths;
 
 
 public class WordCountWithCheckpoint {
-
 
     public static void main(String[] args) throws Exception {
 
@@ -56,7 +56,9 @@ public class WordCountWithCheckpoint {
 //        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
 //        env.setStateBackend(new RocksDBStateBackend("hdfs://83.212.109.198:9000/user/skalogerakis/checkpoint", true));
 
-        env.setStateBackend(new RocksDBStateBackend(checkPointPath, true));
+//        env.setStateBackend(new RocksDBStateBackend(checkPointPath, true));
+        env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
+        env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
 
         env.setParallelism(1);
 
