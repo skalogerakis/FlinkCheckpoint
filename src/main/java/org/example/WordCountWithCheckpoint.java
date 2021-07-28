@@ -56,7 +56,6 @@ public class WordCountWithCheckpoint {
 //        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
 //        env.setStateBackend(new RocksDBStateBackend("hdfs://83.212.109.198:9000/user/skalogerakis/checkpoint", true));
 
-//        env.setStateBackend(new RocksDBStateBackend(checkPointPath, true));
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
 
