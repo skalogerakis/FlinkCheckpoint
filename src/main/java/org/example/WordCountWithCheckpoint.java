@@ -40,21 +40,9 @@ public class WordCountWithCheckpoint {
         }
 
 
-//        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-        //Use RocksDB and incremental checkpoint
-//        env.setStateBackend(new RocksDBStateBackend("hdfs://83.212.109.198:9000/user/skalogerakis/checkpoint", true));
-//        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/tst").toUri(), true));
-
-        //This is for hdfs deployment
-
-//        env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
-//        env.getCheckpointConfig().setCheckpointStorage(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/tester").toUri());
-//        env.getCheckpointConfig().setCheckpointStorage(new FileSystemCheckpointStorage(checkPointPath));
-
         env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
 //        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
-//        env.setStateBackend(new RocksDBStateBackend("hdfs://83.212.109.198:9000/user/skalogerakis/checkpoint", true));
 
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
