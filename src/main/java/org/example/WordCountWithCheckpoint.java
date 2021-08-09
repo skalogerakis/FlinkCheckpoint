@@ -39,6 +39,10 @@ public class WordCountWithCheckpoint {
             throw new IllegalArgumentException("checkpoint-path is mandatory for storing state");
         }
 
+        String filePath = parameterTool.get("file");
+        if (filePath == null ) {
+            throw new IllegalArgumentException("file path is mandatory for storing state");
+        }
 
         env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
@@ -50,7 +54,8 @@ public class WordCountWithCheckpoint {
         env.setParallelism(1);
 
         //In this case use netcat
-        DataStream<String> text = env.socketTextStream("localhost", 9999);
+//        DataStream<String> text = env.socketTextStream("localhost", 9999);
+        DataStream<String> text = env.readTextFile(filePath);
         DataStream<String> words = text.map(new RichMapFunction<String, String>() {
             private transient Counter counter;
 
