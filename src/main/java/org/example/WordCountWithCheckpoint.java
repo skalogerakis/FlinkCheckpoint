@@ -3,12 +3,16 @@ package org.example;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.io.FileInputFormat;
+import org.apache.flink.api.common.serialization.SerializationSchema;
+import org.apache.flink.api.common.serialization.SimpleStringEncoder;
+import org.apache.flink.api.common.serialization.TypeInformationSerializationSchema;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.TextInputFormat;
+import org.apache.flink.api.java.io.TypeSerializerOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
@@ -24,14 +28,18 @@ import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
+import org.apache.flink.streaming.api.functions.sink.filesystem.StreamingFileSink;
 import org.apache.flink.streaming.api.functions.source.FileMonitoringFunction;
 import org.apache.flink.streaming.api.functions.source.FileProcessingMode;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.util.Collector;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 //import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
 
 
 public class WordCountWithCheckpoint {
@@ -53,12 +61,17 @@ public class WordCountWithCheckpoint {
             throw new IllegalArgumentException("file path is mandatory for storing state");
         }
 
-        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
-        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-//        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
+        String outputPath = parameterTool.get("out");
+        if (outputPath == null ) {
+            throw new IllegalArgumentException("output path is mandatory for storing state");
+        }
 
-        env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
-        env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
+//        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
+//        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+////        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
+//
+//        env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
+//        env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
 
         env.setParallelism(1);
 
@@ -99,7 +112,13 @@ public class WordCountWithCheckpoint {
 
         DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s).process(new StatefulReduceFunc());
 
-        wordCount.print();
+        final StreamingFileSink<Tuple2<String, Integer>> sink = StreamingFileSink
+                .forRowFormat(new Path(outputPath), new SimpleStringEncoder<Tuple2<String, Integer>>("UTF-8"))
+                .build();
+
+//        wordCount.print();
+        wordCount.addSink(sink);
+//        wordCount.writeToSocket("localhost",9999);
         env.execute("Wordcount");
     }
 
@@ -141,4 +160,5 @@ public class WordCountWithCheckpoint {
         }
 
     }
+
 }
