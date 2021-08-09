@@ -66,12 +66,12 @@ public class WordCountWithCheckpoint {
             throw new IllegalArgumentException("output path is mandatory for storing state");
         }
 
-//        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
-//        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-////        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
-//
-//        env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
-//        env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
+        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+//        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
+
+        env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
+        env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
 
         env.setParallelism(1);
 
