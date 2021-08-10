@@ -112,12 +112,12 @@ public class WordCountWithCheckpoint {
 
         DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s).process(new StatefulReduceFunc());
 
-        final StreamingFileSink<Tuple2<String, Integer>> sink = StreamingFileSink
-                .forRowFormat(new Path(outputPath), new SimpleStringEncoder<Tuple2<String, Integer>>("UTF-8"))
-                .build();
+//        final StreamingFileSink<Tuple2<String, Integer>> sink = StreamingFileSink
+//                .forRowFormat(new Path(outputPath), new SimpleStringEncoder<Tuple2<String, Integer>>("UTF-8"))
+//                .build();
 
-//        wordCount.print();
-        wordCount.addSink(sink);
+        wordCount.print();
+//        wordCount.addSink(sink);
 //        wordCount.writeToSocket("localhost",9999);
         env.execute("Wordcount");
     }
