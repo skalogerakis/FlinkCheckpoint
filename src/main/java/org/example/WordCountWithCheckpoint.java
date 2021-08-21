@@ -56,15 +56,15 @@ public class WordCountWithCheckpoint {
             throw new IllegalArgumentException("checkpoint-path is mandatory for storing state");
         }
 
-        String filePath = parameterTool.get("file");
-        if (filePath == null ) {
-            throw new IllegalArgumentException("file path is mandatory for storing state");
-        }
-
-        String outputPath = parameterTool.get("out");
-        if (outputPath == null ) {
-            throw new IllegalArgumentException("output path is mandatory for storing state");
-        }
+//        String filePath = parameterTool.get("file");
+//        if (filePath == null ) {
+//            throw new IllegalArgumentException("file path is mandatory for storing state");
+//        }
+//
+//        String outputPath = parameterTool.get("out");
+//        if (outputPath == null ) {
+//            throw new IllegalArgumentException("output path is mandatory for storing state");
+//        }
 
         env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
@@ -76,15 +76,15 @@ public class WordCountWithCheckpoint {
         env.setParallelism(1);
 
         //In this case use netcat
-//        DataStream<String> text = env.socketTextStream("localhost", 9999);
+        DataStream<String> text = env.socketTextStream("localhost", 9999);
 //        DataStream<String> text = env.readTextFile(filePath);
 //        TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
 //        inputFormat.setCharsetName("UTF-8");
-        TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
-        inputFormat.setCharsetName("UTF-8");
-
-        DataStreamSource<String> text = env.readFile(inputFormat, filePath,
-                FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
+//        TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
+//        inputFormat.setCharsetName("UTF-8");
+//
+//        DataStreamSource<String> text = env.readFile(inputFormat, filePath,
+//                FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
 //        DataStream<String> text = env.addSource(new MySource()).returns(Types.STRING);
         DataStream<String> words = text.map(new RichMapFunction<String, String>() {
             private transient Counter counter;
