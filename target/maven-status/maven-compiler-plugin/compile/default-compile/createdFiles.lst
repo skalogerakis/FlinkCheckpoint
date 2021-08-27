@@ -1,4 +1,5 @@
 org/example/WordCountWithCheckpoint$1.class
+org/example/WordCountWithCheckpoint$MySource.class
 org/example/WordCountWithCheckpoint$StatefulReduceFunc.class
 org/example/WordCountWithCheckpoint.class
 org/example/WordCountData.class
