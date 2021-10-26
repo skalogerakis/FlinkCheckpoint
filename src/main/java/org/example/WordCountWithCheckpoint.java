@@ -22,6 +22,8 @@ import org.apache.flink.contrib.streaming.state.RocksDBStateBackend;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.metrics.Counter;
 //import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
+import org.apache.flink.runtime.checkpoint.metadata.MetadataSerializer;
+import org.apache.flink.runtime.checkpoint.metadata.MetadataV3Serializer;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -73,7 +75,7 @@ public class WordCountWithCheckpoint {
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
 
-        env.setParallelism(1);
+        env.setParallelism(2);
 
         //In this case use netcat
         DataStream<String> text = env.socketTextStream("localhost", 9999);
@@ -108,15 +110,17 @@ public class WordCountWithCheckpoint {
                     collector.collect(s1);
                 }
             }
-        });
+        }).uid("testerUID");
 
-        DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s).process(new StatefulReduceFunc());
+        DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s).process(new StatefulReduceFunc()).uid("processState");
 
 //        final StreamingFileSink<Tuple2<String, Integer>> sink = StreamingFileSink
 //                .forRowFormat(new Path(outputPath), new SimpleStringEncoder<Tuple2<String, Integer>>("UTF-8"))
 //                .build();
 
         wordCount.print();
+
+
 //        wordCount.addSink(sink);
 //        wordCount.writeToSocket("localhost",9999);
         env.execute("Wordcount");
