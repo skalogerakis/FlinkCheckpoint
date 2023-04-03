@@ -1,50 +1,34 @@
-package org.example;
+package main;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.api.common.io.FileInputFormat;
-import org.apache.flink.api.common.serialization.SerializationSchema;
-import org.apache.flink.api.common.serialization.SimpleStringEncoder;
-import org.apache.flink.api.common.serialization.TypeInformationSerializationSchema;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.api.common.typeinfo.Types;
-import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.TextInputFormat;
-import org.apache.flink.api.java.io.TypeSerializerOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
-//import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
 import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
-import org.apache.flink.contrib.streaming.state.RocksDBStateBackend;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.metrics.Counter;
-//import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
-import org.apache.flink.runtime.checkpoint.metadata.MetadataSerializer;
-import org.apache.flink.runtime.checkpoint.metadata.MetadataV3Serializer;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
-import org.apache.flink.streaming.api.functions.sink.filesystem.StreamingFileSink;
-import org.apache.flink.streaming.api.functions.source.FileMonitoringFunction;
 import org.apache.flink.streaming.api.functions.source.FileProcessingMode;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.util.Collector;
 
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-//import java.nio.file.Path;
-import java.nio.file.Paths;
+// Generate files with -n number of words using the following command
+//(sed -e "/^[A-Z]/d" -e "/'s\$/d" | shuf -n 50000000 | fmt -w 200) </usr/share/dict/words > file.txt
+//yes this is a replicated input | head -c 1000000KB > file.txt
+//head -c 100MB /dev/urandom > file.txt
+////home/skalogerakis/Documents/Workspace/FlinkCheckpoint/Data/DataFiles/
+// FINAL head -c 600MB <(strings </dev/urandom) > file.txt
 
-import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
-
-
-public class WordCountWithCheckpoint {
+public class WordCountFiles {
 
     public static void main(String[] args) throws Exception {
 
@@ -58,44 +42,30 @@ public class WordCountWithCheckpoint {
             throw new IllegalArgumentException("checkpoint-path is mandatory for storing state");
         }
 
-//        String filePath = parameterTool.get("file");
-//        if (filePath == null ) {
-//            throw new IllegalArgumentException("file path is mandatory for storing state");
-//        }
-//
-//        String outputPath = parameterTool.get("out");
-//        if (outputPath == null ) {
-//            throw new IllegalArgumentException("output path is mandatory for storing state");
-//        }
+        String filePath = parameterTool.get("file");
+        if (filePath == null ) {
+            throw new IllegalArgumentException("file path is mandatory to find the file for reading the input");
+        }
 
-        env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
+        env.enableCheckpointing(15000, CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-//        env.setStateBackend(new RocksDBStateBackend(Paths.get("/home/skalogerakis/Projects/FlinkCheckpoint/checkpoint/Tester").toUri(), true));
-
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
-
         env.setParallelism(2);
 
-        //In this case use netcat
-        DataStream<String> text = env.socketTextStream("localhost", 9999);
-//        DataStream<String> text = env.readTextFile(filePath);
-//        TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
-//        inputFormat.setCharsetName("UTF-8");
-//        TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
-//        inputFormat.setCharsetName("UTF-8");
-//
-//        DataStreamSource<String> text = env.readFile(inputFormat, filePath,
-//                FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
-//        DataStream<String> text = env.addSource(new MySource()).returns(Types.STRING);
+
+        TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
+        inputFormat.setCharsetName("UTF-8");
+
+        DataStreamSource<String> text = env.readFile(inputFormat, filePath,
+                FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
+
         DataStream<String> words = text.map(new RichMapFunction<String, String>() {
             private transient Counter counter;
 
             @Override
             public void open(Configuration config) {
-                this.counter = getRuntimeContext()
-                        .getMetricGroup()
-                        .counter("myCounter");
+                this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
             }
 
             @Override
@@ -114,15 +84,8 @@ public class WordCountWithCheckpoint {
 
         DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s).process(new StatefulReduceFunc()).uid("processState");
 
-//        final StreamingFileSink<Tuple2<String, Integer>> sink = StreamingFileSink
-//                .forRowFormat(new Path(outputPath), new SimpleStringEncoder<Tuple2<String, Integer>>("UTF-8"))
-//                .build();
-
         wordCount.print();
 
-
-//        wordCount.addSink(sink);
-//        wordCount.writeToSocket("localhost",9999);
         env.execute("Wordcount");
     }
 
