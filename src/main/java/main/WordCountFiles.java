@@ -28,13 +28,19 @@ import org.apache.flink.util.Collector;
 ////home/skalogerakis/Documents/Workspace/FlinkCheckpoint/Data/DataFiles/
 // FINAL head -c 600MB <(strings </dev/urandom) > file.txt
 
+// TODO Important -> head -c 50M input.csv > output.csv  -> Isolate 50Mb from an initial file
 public class WordCountFiles {
 
     public static void main(String[] args) throws Exception {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        //Get parameters from CLI
+        /**
+         * Parameters from CLI, both required for successful execution
+         * - c: checkpointing path for storing state
+         * - file: file path for reading the input
+         */
+
         ParameterTool parameterTool = ParameterTool.fromArgs(args);
         env.getConfig().setGlobalJobParameters(parameterTool);
         String checkPointPath = parameterTool.get("c");
@@ -47,6 +53,9 @@ public class WordCountFiles {
             throw new IllegalArgumentException("file path is mandatory to find the file for reading the input");
         }
 
+        /**
+         * Flink Configuration Setup -> Enable Checkpoint, Retain On Cancellation, Incremental RocksDB checkpoint
+         */
         env.enableCheckpointing(15000, CheckpointingMode.EXACTLY_ONCE);
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
@@ -54,35 +63,42 @@ public class WordCountFiles {
         env.setParallelism(2);
 
 
+
         TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
         inputFormat.setCharsetName("UTF-8");
 
-        DataStreamSource<String> text = env.readFile(inputFormat, filePath,
-                FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
+        DataStreamSource<String> input = env.readFile(inputFormat, filePath, FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
 
-        DataStream<String> words = text.map(new RichMapFunction<String, String>() {
-            private transient Counter counter;
+        DataStream<String> words = input
+//                .map(new RichMapFunction<String, String>() {
+//                    private transient Counter counter;
+//                    @Override
+//                    public void open(Configuration config) {
+//                        this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
+//                    }
+//                    @Override
+//                    public String map(String value) throws Exception {
+//                        this.counter.inc();
+//                        return value;
+//                    }
+//                })
+                .flatMap(new FlatMapFunction<String, String>() {
+                    public void flatMap(String s,
+                                        Collector<String> collector) throws Exception {
 
-            @Override
-            public void open(Configuration config) {
-                this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
-            }
+                        String[] split = s.split(" ");
+                        for (String s1 : split) {
+                            collector.collect(s1);
+                        }
+                    }
+                })
+                .name("Splitter")
+                .uid("Splitter");
 
-            @Override
-            public String map(String value) throws Exception {
-                this.counter.inc();
-                return value;
-            }
-        }).flatMap(new FlatMapFunction<String, String>() {
-            public void flatMap(String s, Collector<String> collector) throws Exception {
-                String[] split = s.split(" ");
-                for (String s1 : split) {
-                    collector.collect(s1);
-                }
-            }
-        }).uid("testerUID");
-
-        DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s).process(new StatefulReduceFunc()).uid("processState");
+        DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s)
+                                                             .process(new StatefulReduceFunc())
+                                                             .name("Word Counter")
+                                                             .uid("Word Counter");
 
         wordCount.print();
 
@@ -90,10 +106,11 @@ public class WordCountFiles {
     }
 
     private static class StatefulReduceFunc extends KeyedProcessFunction<String, String, Tuple2<String, Integer>> {
-
         private transient ValueState<Integer> count;
 
-        public void processElement(String s, Context context, Collector<Tuple2<String, Integer>> collector) throws Exception {
+        public void processElement(String s,
+                                   Context context,
+                                   Collector<Tuple2<String, Integer>> collector) throws Exception {
             int currentCnt = count.value() == null ? 1 : 1 + count.value();
             count.update(currentCnt);
             collector.collect(new Tuple2<>(s, currentCnt));
@@ -104,28 +121,4 @@ public class WordCountFiles {
             count = getRuntimeContext().getState(valueStateDescriptor);
         }
     }
-
-    public static class MySource implements SourceFunction {
-        // utility for job cancellation
-        private volatile boolean isRunning = false;
-        private long count = 1L;
-
-        @Override
-        public void run(SourceContext sourceContext) throws Exception {
-            isRunning = true;
-            while (isRunning) {
-                sourceContext.collect(count);
-                count++;
-                // the source runs, isRunning flag should be checked frequently
-            }
-        }
-
-        // invoked by the framework in case of job cancellation
-        @Override
-        public void cancel() {
-            isRunning = false;
-        }
-
-    }
-
 }

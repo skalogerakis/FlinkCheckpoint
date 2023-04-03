@@ -26,12 +26,15 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <flink.version>1.13.1</flink.version>
+<!--    <flink.version>1.13.1</flink.version>-->
+<!--    <scala.binary.version>2.12</scala.binary.version>-->
+<!--    <scala.version>2.12.3</scala.version>-->
+    <flink.version>1.14.3</flink.version>
     <scala.binary.version>2.12</scala.binary.version>
-    <scala.version>2.12.3</scala.version>
+    <scala.version>2.12.17</scala.version>
     <java.version>1.8</java.version>
     <hadoop.version>3.3.1</hadoop.version>
-    <kafka.version>2.4.0</kafka.version>
+<!--    <kafka.version>2.4.0</kafka.version>-->
   </properties>
 
   <dependencies>
@@ -78,43 +81,6 @@
       <version>${flink.version}</version>
     </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>org.apache.flink</groupId>-->
-<!--      <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>-->
-<!--      <version>${flink.version}</version>-->
-<!--      <scope>compile</scope>-->
-<!--    </dependency>-->
-
-    <!--		<dependency>-->
-    <!--			<groupId>org.apache.flink</groupId>-->
-    <!--			<artifactId>flink-ml_${scala.binary.version}</artifactId>-->
-    <!--			<version>${flink.version}</version>-->
-    <!--		</dependency>-->
-
-    <dependency>
-      <groupId>org.apache.flink</groupId>
-      <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
-      <version>${flink.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-clients</artifactId>
-      <version>${kafka.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.flink</groupId>
-      <artifactId>flink-avro</artifactId>
-      <version>${flink.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-<!--    <dependency>-->
-<!--      <groupId>org.apache.flink</groupId>-->
-<!--      <artifactId>flink-connector-filesystem_${scala.binary.version}</artifactId>-->
-<!--      <version>${flink.version}</version>-->
-<!--    </dependency>-->
-
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-hadoop-compatibility_${scala.binary.version}</artifactId>
@@ -141,23 +107,6 @@
       <scope>provided</scope>
     </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>org.apache.hadoop</groupId>-->
-<!--      <artifactId>hadoop-common</artifactId>-->
-<!--      <version>${hadoop.version}</version>-->
-<!--    </dependency>-->
-
-<!--    <dependency>-->
-<!--      <groupId>org.apache.hadoop</groupId>-->
-<!--      <artifactId>hadoop-hdfs</artifactId>-->
-<!--      <version>${hadoop.version}</version>-->
-<!--    </dependency>-->
-
-<!--    <dependency>-->
-<!--      <groupId>org.apache.flink</groupId>-->
-<!--      <artifactId>flink-shaded-hadoop-2-uber</artifactId>-->
-<!--      <version>2.8.3-10.0</version>-->
-<!--    </dependency>-->
 
     <!-- Add logging framework, to produce console output when running in the IDE. -->
     <!-- These dependencies are excluded from the application JAR by default. -->
@@ -183,6 +132,10 @@
 
       <!-- Java Compiler -->
 
+      <!-- We use the maven-shade plugin to create a fat jar that contains all
+          necessary dependencies. -->
+      <!-- Change the value of <mainClass>...</mainClass> if your program entry
+          point changes. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -217,7 +170,7 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer
                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>test.Leg_WordCountFiles</mainClass>
+                  <mainClass>main.WordCountFiles</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -239,10 +192,7 @@
         </configuration>
       </plugin>
 
-      <!-- We use the maven-shade plugin to create a fat jar that contains all
-          necessary dependencies. -->
-      <!-- Change the value of <mainClass>...</mainClass> if your program entry
-          point changes. -->
+
 
     </plugins>
   </build>
