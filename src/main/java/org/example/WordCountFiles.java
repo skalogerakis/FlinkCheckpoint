@@ -22,7 +22,12 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.util.Collector;
 
 // Generate files with -n number of words using the following command
-//(sed -e "/^[A-Z]/d" -e "/'s\$/d" | shuf -n 1000 | fmt -w 200) </usr/share/dict/words > file.txt
+//(sed -e "/^[A-Z]/d" -e "/'s\$/d" | shuf -n 50000000 | fmt -w 200) </usr/share/dict/words > file.txt
+//yes this is a replicated input | head -c 1000000KB > file.txt
+//head -c 100MB /dev/urandom > file.txt
+////home/skalogerakis/Documents/Workspace/FlinkCheckpoint/Data/DataFiles/
+// FINAL head -c 600MB <(strings </dev/urandom) > file.txt
+
 public class WordCountFiles {
 
     public static void main(String[] args) throws Exception {
