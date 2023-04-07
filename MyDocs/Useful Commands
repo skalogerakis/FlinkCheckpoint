@@ -1,5 +1,15 @@
 # Execetute a jar file
- ./flink run /home/skalogerakis/Projects/FlinkCheckpoint/target/FlinkCheckpoint-1.0-SNAPSHOT.jar -c /home/skalogerakis/Projects/FlinkCheckpoint/Checkpoint
+ ./flink run /home/skalogerakis/Documents/Workspace/FlinkCheckpoint/target/FlinkCheckpoint-1.0-SNAPSHOT.jar -c file:///home/skalogerakis/Documents/Workspace/FlinkCheckpoint/checkpoint -file /home/skalogerakis/Documents/Workspace/FlinkCheckpoint/Data/file.txt
 
 # Execute from savepoint (Using ID) 
 ./flink run -s /home/skalogerakis/Projects/FlinkCheckpoint/Checkpoint/bca17900c360f7847a75bb4ea295baf1/chk-* /home/skalogerakis/Projects/FlinkCheckpoint/target/FlinkCheckpoint-1.0-SNAPSHOT.jar -c /home/skalogerakis/Projects/FlinkCheckpoint/Checkpoint
+
+
+
+ ./flink run /home/skalogerakis/Documents/Workspace/FlinkCheckpoint/target/FlinkCheckpoint-1.0-SNAPSHOT.jar -c hdfs:///flink-checkpoints -file /home/skalogerakis/10test.csv
+
+
+state.backend: rocksdb
+state.backend.incremental: true
+state.checkpoints.dir: file:///home/skalogerakis/flink_checkpoints # location to store checkpoints
+//state.checkpoints.dir: hdfs:///flink-checkpoints # location to store checkpoints
