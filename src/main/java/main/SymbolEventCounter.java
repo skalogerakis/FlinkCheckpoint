@@ -67,22 +67,22 @@ public class SymbolEventCounter {
 
         DataStreamSource<String> input = env.readFile(inputFormat, filePath, FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
 
-        DataStream<String> input_ts = input.map(new RichMapFunction<String, String>() {
-            private transient Counter counter;
-            @Override
-            public void open(Configuration config) {
-                this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
-            }
-            @Override
-            public String map(String value) throws Exception {
-                this.counter.inc();
-                System.out.println("Ingest TS " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss,SSS").format(new java.util.Date()));
-                return value;
-            }
-        });
+//        DataStream<String> input_ts = input.map(new RichMapFunction<String, String>() {
+//            private transient Counter counter;
+//            @Override
+//            public void open(Configuration config) {
+//                this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
+//            }
+//            @Override
+//            public String map(String value) throws Exception {
+//                this.counter.inc();
+//                System.out.println("Ingest TS " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss,SSS").format(new java.util.Date()));
+//                return value;
+//            }
+//        });
 
 
-        DataStream<String> words = input_ts.filter((x) -> !x.startsWith("#") && !x.startsWith("ID,SecType") && !x.isEmpty() )
+        DataStream<String> words = input.filter((x) -> !x.startsWith("#") && !x.startsWith("ID,SecType") && !x.isEmpty() )
                                         .flatMap(new FlatMapFunction<String, String>() {
                                             public void flatMap(String s,
                                                                 Collector<String> col) throws Exception {
