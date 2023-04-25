@@ -17,7 +17,10 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.source.FileProcessingMode;
 import org.apache.flink.util.Collector;
+import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.metrics.Counter;
 
+import java.text.SimpleDateFormat;
 
 // To get metrics via the rest api, use curl from the terminal
 // http://localhost:8081/jobs/455e17c95ffba35504f06224de661b76/metrics?get=restartingTime,downtime
@@ -64,7 +67,22 @@ public class SymbolEventCounter {
 
         DataStreamSource<String> input = env.readFile(inputFormat, filePath, FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
 
-        DataStream<String> words = input.filter((x) -> !x.startsWith("#") && !x.startsWith("ID,SecType") && !x.isEmpty() )
+        DataStream<String> input_ts = input.map(new RichMapFunction<String, String>() {
+            private transient Counter counter;
+            @Override
+            public void open(Configuration config) {
+                this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
+            }
+            @Override
+            public String map(String value) throws Exception {
+                this.counter.inc();
+                System.out.println("Ingest TS " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss,SSS").format(new java.util.Date()));
+                return value;
+            }
+        });
+
+
+        DataStream<String> words = input_ts.filter((x) -> !x.startsWith("#") && !x.startsWith("ID,SecType") && !x.isEmpty() )
                                         .flatMap(new FlatMapFunction<String, String>() {
                                             public void flatMap(String s,
                                                                 Collector<String> col) throws Exception {
@@ -81,7 +99,7 @@ public class SymbolEventCounter {
                                                              .name("Symbol Counter")
                                                              .uid("Symbol Counter");
 
-        wordCount.print();
+//        wordCount.print();
 
         env.execute("SymbolCounter");
     }

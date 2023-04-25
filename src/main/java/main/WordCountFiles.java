@@ -72,18 +72,18 @@ public class WordCountFiles {
         DataStreamSource<String> input = env.readFile(inputFormat, filePath, FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
 
         DataStream<String> words = input
-//                .map(new RichMapFunction<String, String>() {
-//                    private transient Counter counter;
-//                    @Override
-//                    public void open(Configuration config) {
-//                        this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
-//                    }
-//                    @Override
-//                    public String map(String value) throws Exception {
-//                        this.counter.inc();
-//                        return value;
-//                    }
-//                })
+                .map(new RichMapFunction<String, String>() {
+                    private transient Counter counter;
+                    @Override
+                    public void open(Configuration config) {
+                        this.counter = getRuntimeContext().getMetricGroup().counter("myCounter");
+                    }
+                    @Override
+                    public String map(String value) throws Exception {
+                        this.counter.inc();
+                        return value;
+                    }
+                })
                 .flatMap(new FlatMapFunction<String, String>() {
                     public void flatMap(String s,
                                         Collector<String> collector) throws Exception {
