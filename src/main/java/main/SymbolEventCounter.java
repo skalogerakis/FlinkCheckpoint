@@ -21,6 +21,7 @@ import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.metrics.Counter;
 
 import java.text.SimpleDateFormat;
+import java.util.UUID;
 
 // To get metrics via the rest api, use curl from the terminal
 // http://localhost:8081/jobs/455e17c95ffba35504f06224de661b76/metrics?get=restartingTime,downtime
@@ -88,7 +89,7 @@ public class SymbolEventCounter {
                                                                 Collector<String> col) throws Exception {
 
                                                 String[] split = s.split(",", -1);
-                                                col.collect(split[0]);
+                                                col.collect(split[0] + UUID.randomUUID());
                                             }
                                         })
                                         .name("Splitter")
@@ -99,8 +100,8 @@ public class SymbolEventCounter {
                                                              .name("Symbol Counter")
                                                              .uid("Symbol Counter");
 
-//        wordCount.print();
 
+//        wordCount.print();
         env.execute("SymbolCounter");
     }
 
