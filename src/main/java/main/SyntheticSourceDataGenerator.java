@@ -20,12 +20,15 @@ public class SyntheticSourceDataGenerator extends RichParallelSourceFunction<Str
         Random random = new Random();
         StringBuilder builder = new StringBuilder();
         long generatedBytes = 0;
-        while (running && generatedBytes < dataSizeInBytes) {
-            builder.setLength(0);
-            builder.append(UUID.randomUUID().toString());
-            String uid = builder.toString();
-            sourceContext.collect(uid);
-            generatedBytes += uid.getBytes().length;
+        while (running) {
+            if(generatedBytes < dataSizeInBytes){
+                builder.setLength(0);
+                builder.append(UUID.randomUUID().toString());
+                String uid = builder.toString();
+                sourceContext.collect(uid);
+                generatedBytes += uid.getBytes().length;
+            }
+
         }
     }
 
