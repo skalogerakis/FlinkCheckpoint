@@ -17,23 +17,16 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.source.FileProcessingMode;
 import org.apache.flink.util.Collector;
-import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.metrics.Counter;
 
-import java.text.SimpleDateFormat;
 import java.util.UUID;
 
-// To get metrics via the rest api, use curl from the terminal
-// http://localhost:8081/jobs/455e17c95ffba35504f06224de661b76/metrics?get=restartingTime,downtime
-
-// TODO Isolate only the first column from the rest -> cat debs2022-gc-trading-day-08-11-21.csv | cut -d, -f1 > test.csv
-// TODO Important -> head -c 50M input.csv > output.csv  -> Isolate 50Mb from an initial file
-
-public class SymbolEventCounter {
+public class SyntheticUIDDataStream {
 
     public static void main(String[] args) throws Exception {
-
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+
+
 
         /**
          * Parameters from CLI, both required for successful execution
@@ -48,10 +41,13 @@ public class SymbolEventCounter {
             throw new IllegalArgumentException("checkpoint-path is mandatory for storing state");
         }
 
-        String filePath = parameterTool.get("file");
-        if (filePath == null ) {
-            throw new IllegalArgumentException("file path is mandatory to find the file for reading the input");
+        int size = parameterTool.getInt("size", -1);
+        if (size == -1) {
+            throw new IllegalArgumentException("The size in MBs of the Data that the Synthetic Source will produce is mandatory");
         }
+
+
+        long dataSizeInBytes = size * 1024 * 1024; // The desired size in MBs of the Synthetic Source
 
         /**
          * Flink Configuration Setup -> Enable Checkpoint, Retain On Cancellation, Incremental RocksDB checkpoint
@@ -61,32 +57,20 @@ public class SymbolEventCounter {
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
 
-
-        TextInputFormat inputFormat = new TextInputFormat(new Path(filePath));
-        inputFormat.setCharsetName("UTF-8");
-
-        DataStreamSource<String> input = env.readFile(inputFormat, filePath, FileProcessingMode.PROCESS_CONTINUOUSLY, 60000l);
-
-        DataStream<String> words = input.filter((x) -> !x.startsWith("#") && !x.startsWith("ID,SecType") && !x.isEmpty() )
-                                        .flatMap(new FlatMapFunction<String, String>() {
-                                            public void flatMap(String s,
-                                                                Collector<String> col) throws Exception {
-
-                                                String[] split = s.split(",", -1);
-                                                col.collect(split[0] + UUID.randomUUID());
-                                            }
-                                        })
-                                        .name("Splitter")
-                                        .uid("Splitter");
-
-        DataStream<Tuple2<String, Integer>> wordCount = words.keyBy((s) -> s)
-                                                             .process(new StatefulReduceFunc())
-                                                             .name("Symbol Counter")
-                                                             .uid("Symbol Counter");
+        DataStream<String> uuid = env.addSource(new SyntheticSourceDataGenerator(dataSizeInBytes))
+                                     .name("Synthetic Source")
+                                     .uid("Synthetic Source");
 
 
-//        wordCount.print();
-        env.execute("SymbolCounter");
+        DataStream<Tuple2<String, Integer>> uuidCount = uuid.keyBy((s) -> s)
+                                                            .process(new StatefulReduceFunc())
+                                                            .name("UUID Counter")
+                                                            .uid("UUID Counter");
+
+
+//        uuidCount.print();
+
+        env.execute("Synthetic UID Data Stream");
     }
 
     private static class StatefulReduceFunc extends KeyedProcessFunction<String, String, Tuple2<String, Integer>> {
