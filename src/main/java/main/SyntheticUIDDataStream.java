@@ -79,7 +79,7 @@ public class SyntheticUIDDataStream {
 //                .uid("UUID Counter");
 
 
-        uuidCount.print();
+//        uuidCount.print();
 
         env.execute("Synthetic UID Data Stream");
     }
