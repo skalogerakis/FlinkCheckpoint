@@ -7,7 +7,7 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceCont
 import java.util.Random;
 import java.util.UUID;
 
-public class SyntheticSourceDataGenerator extends RichParallelSourceFunction<String> {
+public class SyntheticSourceDataGenerator extends RichParallelSourceFunction<Long> {
     private volatile boolean running = true;
     private long dataSizeInBytes;
 
@@ -15,18 +15,32 @@ public class SyntheticSourceDataGenerator extends RichParallelSourceFunction<Str
         this.dataSizeInBytes = dataSizeInBytes;
     }
 
+//    @Override
+//    public void run(SourceContext<String> sourceContext) throws Exception {
+//        Random random = new Random();
+//        StringBuilder builder = new StringBuilder();
+//        long generatedBytes = 0;
+//        while (running) {
+//            if(generatedBytes < dataSizeInBytes){
+//                builder.setLength(0);
+//                builder.append(UUID.randomUUID().toString());
+//                String uid = builder.toString();
+//                sourceContext.collect(uid);
+//                generatedBytes += uid.getBytes().length;
+//            }
+//
+//        }
+//    }
+
     @Override
-    public void run(SourceContext<String> sourceContext) throws Exception {
-        Random random = new Random();
-        StringBuilder builder = new StringBuilder();
+    public void run(SourceContext<Long> sourceContext) throws Exception {
         long generatedBytes = 0;
+        long id = 0L;
         while (running) {
             if(generatedBytes < dataSizeInBytes){
-                builder.setLength(0);
-                builder.append(UUID.randomUUID().toString());
-                String uid = builder.toString();
-                sourceContext.collect(uid);
-                generatedBytes += uid.getBytes().length;
+                sourceContext.collect(id);
+                id++;
+                generatedBytes += 8; // long is 8 bytes
             }
 
         }

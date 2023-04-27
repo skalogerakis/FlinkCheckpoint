@@ -57,37 +57,62 @@ public class SyntheticUIDDataStream {
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
         env.getCheckpointConfig().setCheckpointStorage(checkPointPath);
 
-        DataStream<String> uuid = env.addSource(new SyntheticSourceDataGenerator(dataSizeInBytes))
-                                     .name("Synthetic Source")
-                                     .uid("Synthetic Source");
+//        DataStream<String> uuid = env.addSource(new SyntheticSourceDataGenerator(dataSizeInBytes))
+//                                     .name("Synthetic Source")
+//                                     .uid("Synthetic Source");
+
+        DataStream<Long> uuid = env.addSource(new SyntheticSourceDataGenerator(dataSizeInBytes))
+                .name("Synthetic Source")
+                .uid("Synthetic Source");
+
+//        DataStream<Tuple2<String, Integer>> uuidCount = uuid.keyBy((s) -> s)
+//                                                            .process(new StatefulReduceFunc())
+//                                                            .name("UUID Counter")
+//                                                            .uid("UUID Counter");
+        DataStream<Tuple2<Long, Integer>> uuidCount = uuid.keyBy((s) -> s)
+                .process(new StatefulReduceFunc())
+                .name("UUID Counter")
+                .uid("UUID Counter");
 
 
-        DataStream<Tuple2<String, Integer>> uuidCount = uuid.keyBy((s) -> s)
-                                                            .process(new StatefulReduceFunc())
-                                                            .name("UUID Counter")
-                                                            .uid("UUID Counter");
-
-
-//        uuidCount.print();
+        uuidCount.print();
 
         env.execute("Synthetic UID Data Stream");
     }
 
-    private static class StatefulReduceFunc extends KeyedProcessFunction<String, String, Tuple2<String, Integer>> {
-        private transient ValueState<Integer> count;
+//    private static class StatefulReduceFunc extends KeyedProcessFunction<String, String, Tuple2<String, Integer>> {
+//        private transient ValueState<Integer> count;
+//
+//        public void open(Configuration parameters) {
+//            ValueStateDescriptor<Integer> valueStateDescriptor = new ValueStateDescriptor<Integer>("count", Integer.class);
+//            count = getRuntimeContext().getState(valueStateDescriptor);
+//        }
+//        public void processElement(String s,
+//                                   Context context,
+//                                   Collector<Tuple2<String, Integer>> collector) throws Exception {
+//            int currentCnt = count.value() == null ? 1 : 1 + count.value();
+//            count.update(currentCnt);
+//            collector.collect(new Tuple2<>(s, currentCnt));
+//        }
+//
+//
+//    }
+    private static class StatefulReduceFunc extends KeyedProcessFunction<Long, Long, Tuple2<Long, Integer>> {
+    private transient ValueState<Integer> count;
 
-        public void open(Configuration parameters) {
-            ValueStateDescriptor<Integer> valueStateDescriptor = new ValueStateDescriptor<Integer>("count", Integer.class);
-            count = getRuntimeContext().getState(valueStateDescriptor);
-        }
-        public void processElement(String s,
-                                   Context context,
-                                   Collector<Tuple2<String, Integer>> collector) throws Exception {
-            int currentCnt = count.value() == null ? 1 : 1 + count.value();
-            count.update(currentCnt);
-            collector.collect(new Tuple2<>(s, currentCnt));
-        }
-
-
+    public void open(Configuration parameters) {
+        ValueStateDescriptor<Integer> valueStateDescriptor = new ValueStateDescriptor<Integer>("count", Integer.class);
+        count = getRuntimeContext().getState(valueStateDescriptor);
     }
+    public void processElement(Long s,
+                               Context context,
+                               Collector<Tuple2<Long, Integer>> collector) throws Exception {
+        int currentCnt = count.value() == null ? 1 : 1 + count.value();
+        count.update(currentCnt);
+        collector.collect(new Tuple2<>(s, currentCnt));
+    }
+
+
+}
+
 }
