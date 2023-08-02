@@ -29,7 +29,7 @@
 <!--    <flink.version>1.13.1</flink.version>-->
 <!--    <scala.binary.version>2.12</scala.binary.version>-->
 <!--    <scala.version>2.12.3</scala.version>-->
-    <flink.version>1.14.3</flink.version>
+    <flink.version>1.13.1</flink.version>
     <scala.binary.version>2.12</scala.binary.version>
     <scala.version>2.12.17</scala.version>
     <java.version>1.8</java.version>
