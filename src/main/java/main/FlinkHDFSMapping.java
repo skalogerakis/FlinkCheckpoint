@@ -25,104 +25,87 @@ public class FlinkHDFSMapping {
 
     public static void main(String[] args) throws Exception {
 
-        String outputFile = "/home/skalogerakis/file_out4.txt";
+        String localOutputFilePath = "/home/skalogerakis/file_out6.txt";
+        String hdfsFilePath =  "hdfs:/sample.txt";
 //        Files.createDirectories(Paths.get(outputFile));
 //        Files.createDirectories(restoreFilePath);
 //        String hdfsFilePath = remoteFileHandle.toString(); // The HDFS path to the file
 //        String localOutputFilePath = restoreFilePath.toString(); // The local path where the file will be moved
 
-//        String test =  "hdfs:/flink-checkpoints/34cd14c9665c3eb53e41c3e4c596f837/shared/8d31cf70-ce80-436a-bd51-f458de465bc3";
-        String test =  "hdfs:/sample.txt";
-
-        List<String> commands = new ArrayList<String>(){{add("cat");}};
-
-
+        //Init the cat cmd
+        List<String> concat_cmd = new ArrayList<String>(){{add("cat");}};
 
         try {
-            // Build the command to execute
-//            String command = "hdfs fsck " + test + " -files -blocks"; //-locations does not seem to be required
+            /*** HDFS FSCK CMD ***/
 
-//            String command = "hdfs fsck " + test + " -files -blocks"; //-locations does not seem to be required
-            String[] command = {"hdfs", "fsck", test, "-files", "-blocks"};
-//            Runtime rt = Runtime.getRuntime();
-//
-//            // Execute the command
-//            Process process = rt.exec(command);
+            // Build the hdfs info command to find all the blocks for a given file
+            String[] hdfsInfoCmd = {"hdfs", "fsck", hdfsFilePath, "-files", "-blocks"};
 
+            ProcessBuilder hdfs_pb = new ProcessBuilder(hdfsInfoCmd);
+            Process hdfs_proc = hdfs_pb.start();
 
-            ProcessBuilder pb = new ProcessBuilder(command);
-
-            Process process = pb.start();
-            // Wait for the command to complete
-            CommandExecutionStatus(process.waitFor());
+            // Wait for the command to complete and check status
+            CommandExecutionStatus(hdfs_proc.waitFor());
 
 
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-//            String regexPattern = ".* len=(\\d*) Live_repl=(\\d*).*";
+            // String regexPattern = ".* len=(\\d*) Live_repl=(\\d*).*";
             // Regex that matches the desired input
             String regexPattern = ".*(\\d+)\\. (BP-\\w.+).* len=(\\d*) Live_repl=(\\d*).*";
             Pattern pattern = Pattern.compile(regexPattern);
 
+            BufferedReader hdfs_cmd_output = new BufferedReader(new InputStreamReader(hdfs_proc.getInputStream()));
+
             // read the output from the command
             String s = null;
-            while ((s = stdInput.readLine()) != null)
+            while ((s = hdfs_cmd_output.readLine()) != null)
             {
                 if(s.startsWith("Status")) break;   //We don't need extra information from that point on
-                System.out.println(s);
+                //System.out.println(s);
 
                 Matcher matcher = pattern.matcher(s);
 
+                // When the pattern finds a match
                 if (matcher.find()) {
-                    //We need this command
-//                    find /tmp/hadoop-fs-tmp/current/BP-798034145-127.0.0.1-1690967214498/current/finalized -name 'blk_1073741832*'
-                    // Your regex matched the line, take values from the regex groups
-                    String block_num = matcher.group(1); //The number of the block
-                    String info_loc = matcher.group(2); //The information about location
 
-                    System.out.println("Value 1: " + block_num + " Value 2: " + info_loc);
+                    // Your regex matched the line, take values from the regex groups
+                    // String block_num = matcher.group(1); //The number of the block
+                    String info_loc = matcher.group(2); //The information about location
+                    //System.out.println("Value 2: " + info_loc);
 
 
                     String[] split_info = info_loc.split(":");
+                    String block_pool_id = split_info[0];   //Block Pool Id (used in path)
+                    String block_id = split_info[1];  //Specific Block
 
-                    String path_info = split_info[0];
-                    String block_info = split_info[1];
-                    String sub_block_info = block_info.substring(0, block_info.lastIndexOf("_"));
-                    System.out.println("Path Info "+ path_info + " Value Info " + sub_block_info);
+                    String block_id_path = block_id.substring(0, block_id.lastIndexOf("_"));
+                    //System.out.println("Path Info "+ block_pool_id + " Value Info " + block_id_path);
 
-//                    String fin_path = "/tmp/hadoop-fs-tmp/current/" + path_info + "/current/finalized -name " + sub_block_info + "";
-//
-//                    String fin_path = "/tmp/hadoop-fs-tmp/current/" + path_info + "/current/finalized -name '" + sub_block_info + "*'";
-                    String fin_path = "/tmp/hadoop-fs-tmp/current/" + path_info + "/current/finalized";
-
-                    System.out.println(fin_path);
-
-                    //TODO use find with the fin path to find where the required files are located
+                    /*** FIND CMD ***/
+                    //THIS is the goal command. However we don't seem to need *
+                    // find /tmp/hadoop-fs-tmp/current/BP-798034145-127.0.0.1-1690967214498/current/finalized -name 'blk_1073741832*'
+                    //String fin_path = "/tmp/hadoop-fs-tmp/current/" + path_info + "/current/finalized -name '" + sub_block_info + "*'";
+                    String find_search_path = "/tmp/hadoop-fs-tmp/current/" + block_pool_id + "/current/finalized";
 
 
-//                    String find_command = "find " + fin_path;
-                    String[] find_command = {"find", fin_path, "-name", sub_block_info};
-                    System.out.println("Find command " + find_command);
+                    String[] find_command = {"find", find_search_path, "-name", block_id_path};
                     // Execute the command
 
-                    ProcessBuilder pb3 = new ProcessBuilder(find_command);
-
-//                    Process process3 = rt.exec(find_command);
-                    Process process3 = pb3.start();
+                    ProcessBuilder find_pb = new ProcessBuilder(find_command);
+                    Process find_proc = find_pb.start();
 
                     // Wait for the command to complete
-                    CommandExecutionStatus(process3.waitFor());
+                    CommandExecutionStatus(find_proc.waitFor());
 
 
+                    BufferedReader find_cmd_output = new BufferedReader(new InputStreamReader(find_proc.getInputStream()));
 
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(process3.getInputStream()));
-                    String line;
+                    String line = null;
+                    //We are expecting to find one path only. In case no path Error
+                    if ((line=find_cmd_output.readLine())!=null)
+                        concat_cmd.add(line);
+                    else
+                        System.out.println("ERROR -> Could not find " + find_search_path + ", with BlockID: " + block_id_path);
 
-                    while ((line=reader.readLine())!=null)
-                    {
-                        System.out.println(line);
-                        commands.add(line);
-                    }
 
                 }
 
@@ -131,14 +114,13 @@ public class FlinkHDFSMapping {
             }
 
 
+            /*** CONCAT CMD ***/
+            // Finish with the concat process after finding all the blocks
+            ProcessBuilder concat_pb = new ProcessBuilder(concat_cmd);
+            concat_pb.redirectOutput(ProcessBuilder.Redirect.to(new File(localOutputFilePath)));
+            Process concat_proc = concat_pb.start();
 
-            // creating the process
-            ProcessBuilder pb2 = new ProcessBuilder(commands);
-            pb2.redirectOutput(ProcessBuilder.Redirect.to(new File(outputFile)));
-            // starting the process
-            Process process2 = pb2.start();
-
-            CommandExecutionStatus(process2.waitFor());
+            CommandExecutionStatus(concat_proc.waitFor());
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
