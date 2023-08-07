@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//https://markobigdata.com/2016/03/06/hdfs-files-stored-on-a-local-filesystem-linux/
+//https://askubuntu.com/questions/359481/where-in-linux-file-system-can-i-see-files-of-hadoop-hdfs
 public class FlinkHDFSMapping {
 
     public static void CommandExecutionStatus(int exitCode){
@@ -25,9 +27,11 @@ public class FlinkHDFSMapping {
 
     public static void main(String[] args) throws Exception {
 
-        String localOutputFilePath = "/home/skalogerakis/file_out6.txt";
-        String hdfsFilePath =  "hdfs:/sample.txt";
-//        Files.createDirectories(Paths.get(outputFile));
+        String localOutputFilePath = "/tmp/flink-io-e7b2471c-cd85-4d9a-af2f-10d098d07196/job_3c22b365c40194dec0a7b2ecb5fadfb9_op_KeyedProcessOperator_98c41c9645f181997ff11fa15e8b5c3e__1_1__uuid_c6009454-b883-4561-b30b-e45a735f40d5/1ff7827c-9cdf-471d-8885-c694fdb4a7b0/000016.sst";
+        String hdfsFilePath =  "hdfs:/flink-checkpoints/3c22b365c40194dec0a7b2ecb5fadfb9/shared/057b9794-c7e1-4806-b497-f34a7b0142a0";
+//        String localOutputFilePath = "/home/skalogerakis/file_test.txt";
+//        String hdfsFilePath =  "hdfs:/sample.txt";
+        Files.createDirectories(Paths.get(localOutputFilePath).getParent());
 //        Files.createDirectories(restoreFilePath);
 //        String hdfsFilePath = remoteFileHandle.toString(); // The HDFS path to the file
 //        String localOutputFilePath = restoreFilePath.toString(); // The local path where the file will be moved
