@@ -35,16 +35,44 @@ public class BlockTracerHDFS {
     }
 
     // In case the dictionary is empty return empty string otherwise the IP containing the highest block capacity
-    public static String Ip_Finder() {
+//    public static String Ip_Finder() {
+//
+//        // Sorting the map by value size and get the first IP available
+//        return hdfsStats.entrySet().stream()
+//                .max(Comparator.comparing(Map.Entry::getValue)).get().getKey();
+//
+//
+//    }
 
-        if (hdfsStats.isEmpty()) return "";
+    public static List<String> SortedHostingList() {
 
-        // Sorting the map by value size and get the first IP available
-        return hdfsStats.entrySet().stream()
-                .max(Comparator.comparing(Map.Entry::getValue)).get().getKey();
+        // Create a List to store the sorted keys
+        List<String> sortedKeys = new ArrayList<>();
 
+        // Sort the HashMap entries by values using a custom Comparator
+        List<Map.Entry<String, Long>> entryList = new ArrayList<>(hdfsStats.entrySet());
+        entryList.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
+
+        // Add the keys to the sortedKeys List
+        for (Map.Entry<String, Long> entry : entryList) {
+            sortedKeys.add(entry.getKey());
+        }
+
+        return sortedKeys;
 
     }
+
+//    // In case the dictionary is empty return empty string otherwise the IP containing the highest block capacity
+//    public static String Ip_Finder() {
+//
+//        if (hdfsStats.isEmpty()) return "";
+//
+//        // Sorting the map by value size and get the first IP available
+//        return hdfsStats.entrySet().stream()
+//                .max(Comparator.comparing(Map.Entry::getValue)).get().getKey();
+//
+//
+//    }
 
 
 
@@ -103,8 +131,9 @@ public class BlockTracerHDFS {
             }
 
             //resultPrinter();
-            String hostingIP = Ip_Finder();
-            System.out.println(hostingIP);
+//            Ip_Finder();
+            List<String> hostingList = SortedHostingList();
+            System.out.println(hostingList);
 
         } catch (IOException e) {
             e.printStackTrace();
