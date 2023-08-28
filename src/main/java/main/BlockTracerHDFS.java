@@ -3,6 +3,8 @@ package main;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,6 +80,9 @@ public class BlockTracerHDFS {
 
     public static void main(String[] args) {
 
+        Instant before = Instant.now();
+
+
         String path = "hdfs:/flink-checkpoints/a585af6b0b1aed38c4facfb9df3daf7c";
 
         try {
@@ -134,6 +139,10 @@ public class BlockTracerHDFS {
 //            Ip_Finder();
             List<String> hostingList = SortedHostingList();
             System.out.println(hostingList);
+
+            Instant after = Instant.now();
+
+            System.out.println(Duration.between(before, after).toMillis());
 
         } catch (IOException e) {
             e.printStackTrace();
