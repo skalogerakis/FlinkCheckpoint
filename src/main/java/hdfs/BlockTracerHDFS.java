@@ -1,4 +1,4 @@
-package main;
+package hdfs;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -114,8 +114,9 @@ public class BlockTracerHDFS {
                             Regex to get all the ips on which a HDFS block is present. In the case of more than one replicas
                             DatanodeInfoWithStorage appears multiple times with the desired IP
                          */
-                        String regexIps = ".*" + ".*DatanodeInfoWithStorage\\[([\\w.]*)".repeat(replicationFactor);
+//                        String regexIps = ".*" + ".*DatanodeInfoWithStorage\\[([\\w.]*)".repeat(replicationFactor);
 
+                        String regexIps = ".*" + String.format("%0" + replicationFactor + "d", 0).replace("0", ".*DatanodeInfoWithStorage\\[([\\w.]*)");
                         Pattern patternIps = Pattern.compile(regexIps);
                         Matcher matcherIps = patternIps.matcher(line);
 

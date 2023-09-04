@@ -45,13 +45,13 @@ public class SyntheticUIDDataStream {
             throw new IllegalArgumentException("checkpoint-path is mandatory for storing state");
         }
 
-        int size = parameterTool.getInt("size", -1);
+        long size = parameterTool.getLong("size", -1);
         if (size == -1) {
             throw new IllegalArgumentException("The size in MBs of the Data that the Synthetic Source will produce is mandatory");
         }
 
 
-        long dataSizeInBytes = size * 1024 * 1024; // The desired size in MBs of the Synthetic Source
+        long dataSizeInBytes = size * 1024L * 1024L; // The desired size in MBs of the Synthetic Source
 
         /**
          * Flink Configuration Setup -> Enable Checkpoint, Retain On Cancellation, Incremental RocksDB checkpoint
@@ -79,7 +79,7 @@ public class SyntheticUIDDataStream {
 //                .uid("UUID Counter");
 
 
-//        uuidCount.print();
+        //uuidCount.print();
 
         env.execute("Synthetic UID Data Stream");
     }
