@@ -96,7 +96,6 @@ public class FlinkHDFSMapping2 {
 
             }
 
-            System.out.println("YOOOOO");
 
 //        } catch (IOException e) {
 //            e.printStackTrace();

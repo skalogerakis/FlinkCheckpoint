@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 //https://markobigdata.com/2016/03/06/hdfs-files-stored-on-a-local-filesystem-linux/
 //https://askubuntu.com/questions/359481/where-in-linux-file-system-can-i-see-files-of-hadoop-hdfs
@@ -109,6 +110,20 @@ public class FlinkHDFSMapping {
                         concat_cmd.add(line);
                     else
                         System.out.println("ERROR -> Could not find " + find_search_path + ", with BlockID: " + block_id_path);
+
+
+
+//                    List<Path> foundFiles = Files.walk(Paths.get(find_search_path))
+//                            .filter(Files::isRegularFile)
+//                            .filter(path -> path.getFileName().toString().equals(block_id_path))
+//                            .collect(Collectors.toList());
+//
+//                    if (foundFiles.isEmpty()) {
+//                        System.out.println("ERROR -> Could not find " + find_search_path + ", with BlockID: " + block_id_path);
+//                    }else{
+//                        //We are expecting to find one path only. In case no path Error
+//                        concat_cmd.add(foundFiles.get(0).toString());
+//                    }
 
 
                 }
